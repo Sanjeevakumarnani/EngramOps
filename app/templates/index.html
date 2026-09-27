@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="hero card">
+  <div><span class="eyebrow">Persistent engineering memory</span>
+  <h1>Stop relearning the same engineering lesson.</h1>
+  <p>EngramOps turns incidents, changes, root causes and outcomes into persistent Hindsight memory, then recalls that experience when someone proposes a similar change.</p>
+  <p class="muted">{{ hindsight_status }}</p></div>
+  <div class="hero-actions"><a class="button primary" href="/demo">Load 12-record demo memory</a></div>
+  <div class="hero-visual"><div>RETAIN</div><span>→</span><div>HINDSIGHT</div><span>→</span><div>RECALL</div><span>→</span><div>DECISION</div></div>
+</section>
+<section class="stats-grid">
+  <div class="stat card"><span>Records</span><strong>{{ stats.total }}</strong></div>
+  <div class="stat card"><span>Failures</span><strong>{{ stats.failures }}</strong></div>
+  <div class="stat card"><span>Partial</span><strong>{{ stats.partial }}</strong></div>
+  <div class="stat card"><span>Successes</span><strong>{{ stats.successes }}</strong></div>
+  <div class="stat card"><span>Critical / High</span><strong>{{ stats.critical_high }}</strong></div>
+</section>
+<div class="grid two">
+<section class="card"><h2>Capture an engineering lesson</h2>
+<form method="post" action="/records" class="stack">
+<label>Title<input name="title" required placeholder="Redis cache rollback after stale-payment state"></label>
+<div class="grid two"><label>Incident type<select name="incident_type"><option>incident</option><option>change</option><option>experiment</option><option>near-miss</option><option>decision</option></select></label>
+<label>Severity<select name="severity"><option>medium</option><option>high</option><option>critical</option><option>low</option></select></label></div>
+<label>System<input name="system" placeholder="Payments API"></label><label>Summary<textarea name="summary" rows="3"></textarea></label>
+<label>Context<textarea name="context" rows="3" placeholder="What changed, what constraints existed, what was different?"></textarea></label>
+<label>Changes, pipe-separated<input name="changes" placeholder="enabled cache | changed TTL"></label>
+<label>Symptoms, pipe-separated<input name="symptoms" placeholder="stale responses | duplicate state"></label>
+<label>Root cause<textarea name="root_cause" rows="2"></textarea></label>
+<label>Attempted fixes, pipe-separated<input name="attempted_fixes"></label>
+<div class="grid two"><label>Outcome<select name="outcome"><option>failure</option><option>partial</option><option>success</option><option>unknown</option></select></label>
+<label>Tags, pipe-separated<input name="tags" placeholder="cache | payments | rollback"></label></div>
+<label>Lessons, pipe-separated<textarea name="lessons" rows="2"></textarea></label>
+<button class="button primary" type="submit">Retain engineering memory</button>
+</form></section>
+<section class="card"><h2>Import history</h2>
+<p class="muted">CSV columns: title, incident_type, system, severity, summary, context, changes, symptoms, root_cause, attempted_fixes, outcome, lessons, tags, occurred_at, source</p>
+<form method="post" action="/import" enctype="multipart/form-data" class="stack compact"><input type="file" name="file" accept=".csv" required><button class="button" type="submit">Import CSV + retain to Hindsight</button></form>
+<hr><h2>Analyze a proposed change</h2>
+<form method="post" action="/analyze" class="stack">
+<label>System<input name="system" placeholder="Payments API"></label>
+<label>Proposed change<textarea name="change" required rows="3" placeholder="Introduce response caching for read-heavy payment status endpoints."></textarea></label>
+<label>Goal<textarea name="goal" rows="2"></textarea></label><label>Context<textarea name="context" rows="3"></textarea></label>
+<label>Constraints, pipe-separated<input name="constraints" placeholder="must preserve payment correctness | no schema change"></label>
+<label>Notes<textarea name="notes" rows="2"></textarea></label><button class="button danger" type="submit">Recall history + analyze</button>
+</form></section></div>
+<section class="card"><div class="section-head"><h2>Living memory views</h2><button class="button" type="button" onclick="loadMemoryViews()">Refresh memory</button></div>
+<p id="memory-status" class="muted">Click refresh after connecting Hindsight to generate cross-history summaries.</p><div id="memory-grid" class="grid two"></div></section>
+<section class="card"><div class="section-head"><h2>Recent engineering memory</h2><a class="button" href="/api/records">JSON API</a></div>
+{% if records %}<div class="stack compact">{% for r in records %}<article class="memory-card">
+<div class="run-head"><div><strong>#{{ r.id }} · {{ r.title }}</strong><div class="small muted">{{ r.system or 'Unspecified system' }} · {{ r.incident_type }} · {{ r.occurred_at.strftime('%Y-%m-%d') }}</div></div><span class="pill {{ r.outcome }}">{{ r.outcome }}</span></div>
+<p>{{ r.summary }}</p>{% if r.root_cause %}<div class="evidence"><strong>Root cause:</strong> {{ r.root_cause }}</div>{% endif %}
+{% if r.lessons %}<div class="tag-row">{% for tag in r.lessons %}<span class="tag">lesson: {{ tag }}</span>{% endfor %}</div>{% endif %}
+</article>{% endfor %}</div>{% else %}<p class="muted">No engineering records yet. Import the provided demo dataset to create an immediate memory timeline.</p>{% endif %}
+</section>
+{% endblock %}
+<script>
+async function loadMemoryViews(){const status=document.getElementById('memory-status');const grid=document.getElementById('memory-grid');status.textContent='Recalling and reflecting across persistent memory…';const r=await fetch('/api/memory-views');const data=await r.json();if(!data.live){status.textContent='Hindsight is not currently live: '+(data.error||'configure HINDSIGHT_BASE_URL');grid.innerHTML='';return;}status.textContent='Live Hindsight memory summaries';grid.innerHTML=Object.entries(data.views).map(([k,v])=>'<div class="memory-card"><h3>'+escapeHtml(k)+'</h3><p>'+escapeHtml(v)+'</p></div>').join('');}
+function escapeHtml(s){return String(s||'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
+</script>
