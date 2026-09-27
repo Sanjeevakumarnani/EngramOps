@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{{ title or "EngramOps" }}</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div><a class="brand" href="/">EngramOps</a><div class="subtitle">Engineering Failure & Decision Memory</div></div>
+    <nav><a href="/">Dashboard</a><a href="/analysis">Latest Analysis</a><a href="/health">Health</a></nav>
+  </header>
+  <main class="layout">{% block content %}{% endblock %}</main>
+</body>
+</html>
