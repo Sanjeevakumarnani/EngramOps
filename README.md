@@ -1,5 +1,7 @@
 # EngramOps
 
+[Contributor guide](CONTRIBUTING.md) · [Portfolio](https://sanjeevakumarnani.github.io)
+
 ## Engineering Failure & Decision Memory
 
 EngramOps is a Hindsight-powered memory layer for engineering teams. It turns incidents, changes, root causes, attempted fixes, outcomes, and lessons into durable memory, then recalls relevant experience when an engineer proposes a similar change.
